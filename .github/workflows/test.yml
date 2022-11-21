@@ -14,7 +14,7 @@ jobs:
     with:
       repo-name: tdr-antivirus
       test-command: |
-        pip install pyOpenSSL
+        pip install pyOpenSSL --upgrade
         pip install -r requirements.txt
         python -m pytest
     secrets:
