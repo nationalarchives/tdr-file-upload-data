@@ -3,7 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
+      - add-upload-file-data-lambda
 jobs:
   pre-deploy:
     uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_build.yml@main
