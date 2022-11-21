@@ -36,9 +36,11 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_one["fileId"] == "13702546-da63-4545-a9eb-a892df1aafba"
         assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
         assert file_one["userId"] == user_id
+        assert file_one["consignmentId"] == consignment_id
         assert file_two["fileId"] == "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2"
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
+        assert file_two["consignmentId"] == consignment_id
 
 
 @patch('urllib.request.urlopen')
