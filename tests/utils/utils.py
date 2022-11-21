@@ -80,6 +80,7 @@ def setup_env_vars():
     os.environ["CLIENT_ID"] = "id"
     os.environ["API_URL"] = "http://localhost"
     os.environ["BUCKET_NAME"] = "test-bucket"
+    os.environ['AWS_DEFAULT_REGION'] = 'eu-west-2'
 
 
 def sort_by_id(file):
