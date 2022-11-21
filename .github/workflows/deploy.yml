@@ -1,8 +1,5 @@
 name: TDR Deploy File Upload Data Lambda
 on:
-  push:
-    branches:
-      - add-upload-file-data-lambda
   workflow_dispatch:
     inputs:
       environment:
