@@ -12,6 +12,7 @@ jobs:
       repo-name: tdr-file-upload-data
       artifact-name: function
       artifact-file-type: zip
+      artifact-path: .
       build-command: |
         pip install --target ./package -r requirements-runtime.txt
         cp src/lambda_handler.py package/
