@@ -76,6 +76,21 @@ def test_error_from_keycloak(ssm, s3):
 
 
 @patch('urllib.request.urlopen')
+def test_error_if_s3_download_error(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    event = {'userId': user_id, 'consignmentId': consignment_id}
+    configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        with pytest.raises(s3.exceptions.NoSuchBucket) as ex:
+            lambda_handler.handler(event, None)
+
+        assert ex.value.response['Error']['Message'] == 'The specified bucket does not exist'
+
+
+@patch('urllib.request.urlopen')
 def test_error_if_s3_files_mismatch(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
