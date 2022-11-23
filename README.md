@@ -6,7 +6,7 @@ It recieves `{"consignmentId": "xxxx-xxxx-xxxx", "userId": "xxxx-xxxx-xxxx"}` as
 * Calls the API to get a list of fileIds and original path data
 * Gets the list of files from S3
 * Compares the two and throws an error if there is a mismatch
-* Returns `[{"fileId": "xxxx-xxxx-xxxx" , "originalPath": "/original/file/path", "userId": "xxxx-xxxx-xxxx"}]`
+* Returns `[{"consignmentId": "xxxx-xxxx-xxxx", "fileId": "xxxx-xxxx-xxxx" , "originalPath": "/original/file/path", "userId": "xxxx-xxxx-xxxx"}]`
 This array will then be passed to the map function in the step function which will call each of the backend checks in turn.
   
 ## Running locally
