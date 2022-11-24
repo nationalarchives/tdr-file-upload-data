@@ -1,0 +1,28 @@
+name: TDR Run File Upload Data Tests
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+      - release-*
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - uses: nationalarchives/tdr-github-actions/.github/actions/run-git-secrets@main
+      - uses: nationalarchives/tdr-github-actions/.github/actions/slack-send@main
+        if: failure()
+        with:
+          message: ":warning: Secrets found in repository ${{ inputs.repo-name }}"
+          slack-url: ${{ secrets.SLACK_WEBHOOK }}
+      - run: |
+          pip install pyOpenSSL --upgrade
+          pip install -r requirements.txt
+          python -m pytest
