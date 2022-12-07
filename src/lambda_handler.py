@@ -107,5 +107,7 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
-    return [process_file(file) | {'consignmentId': consignment_id, 'userId': user_id} for file in consignment.files
-            if file.fileType == "File"]
+    return {
+        "results": [process_file(file) | {'consignmentId': consignment_id, 'userId': user_id}
+                    for file in consignment.files if file.fileType == "File"]
+    }
