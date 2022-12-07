@@ -17,6 +17,14 @@ graphql_ok_multiple_files = b'''{
             {
               "name": "ClientSideOriginalFilepath",
               "value": "testfile/subfolder/subfolder1.txt"
+            },
+            {
+              "name": "SHA256ClientSideChecksum",
+              "value": "achecksum"
+            },
+            {
+              "name": "ClientSideFileSize",
+              "value": "0"
             }
           ]
         },
@@ -27,6 +35,14 @@ graphql_ok_multiple_files = b'''{
             {
               "name": "ClientSideOriginalFilepath",
               "value": "testfile/subfolder/subfolder2.txt"
+            },
+            {
+              "name": "SHA256ClientSideChecksum",
+              "value": "achecksum"
+            },
+            {
+              "name": "ClientSideFileSize",
+              "value": "0"
             }
           ]
         }
