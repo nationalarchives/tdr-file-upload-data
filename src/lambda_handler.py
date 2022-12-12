@@ -20,6 +20,7 @@ class File(Type):
 
 class Consignment(Connection):
     files = list_of(File)
+    consignmentType = Field(str)
 
 
 class Query(Type):
@@ -49,6 +50,7 @@ def get_token(client_secret):
 def get_query(consignment_id):
     operation = Operation(Query)
     consignment = operation.getConsignment(consignmentid=consignment_id)
+    consignment.consignmentType()
     files = consignment.files()
     files.fileId()
     files.fileType()
@@ -108,6 +110,7 @@ def handler(event, lambda_context):
     consignment = (query + data).getConsignment
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     return {
-        "results": [process_file(file) | {'consignmentId': consignment_id, 'userId': user_id}
+        "results": [process_file(file) |
+                    {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
                     for file in consignment.files if file.fileType == "File"]
     }
