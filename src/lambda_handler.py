@@ -20,6 +20,7 @@ class File(Type):
 
 class Consignment(Connection):
     files = list_of(File)
+    consignmentType = Field(str)
 
 
 class Query(Type):
@@ -49,6 +50,7 @@ def get_token(client_secret):
 def get_query(consignment_id):
     operation = Operation(Query)
     consignment = operation.getConsignment(consignmentid=consignment_id)
+    consignment.consignmentType()
     files = consignment.files()
     files.fileId()
     files.fileType()
@@ -56,9 +58,17 @@ def get_query(consignment_id):
     return operation
 
 
+def get_metadata_value(file, name):
+    return [data['value'] for data in file.fileMetadata if data.name == name][0]
+
+
 def process_file(file: File):
-    file_path = [data['value'] for data in file.fileMetadata if data.name == "ClientSideOriginalFilepath"][0]
-    return {'fileId': file.fileId, 'originalPath': file_path}
+    return {
+        'fileId': file.fileId,
+        'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
+        'fileSize': get_metadata_value(file, "ClientSideFileSize"),
+        "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum")
+    }
 
 
 def s3_list_files(prefix):
@@ -99,4 +109,8 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
-    return [process_file(file) | {'consignmentId': consignment_id, 'userId': user_id} for file in consignment.files]
+    return {
+        "results": [process_file(file) |
+                    {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
+                    for file in consignment.files if file.fileType == "File"]
+    }

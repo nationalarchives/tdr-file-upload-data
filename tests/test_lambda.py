@@ -29,7 +29,7 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
-        response = lambda_handler.handler(event, None)
+        response = lambda_handler.handler(event, None)["results"]
         response.sort(key=sort_by_id)
         file_one = response[0]
         file_two = response[1]

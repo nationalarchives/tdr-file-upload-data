@@ -9,6 +9,7 @@ missing_file_id = ['13702546-da63-4545-a9eb-a892df1aafba']
 graphql_ok_multiple_files = b'''{
   "data": {
     "getConsignment": {
+      "consignmentType": "standard",
       "files": [
         {
           "fileId": "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2",
@@ -17,6 +18,14 @@ graphql_ok_multiple_files = b'''{
             {
               "name": "ClientSideOriginalFilepath",
               "value": "testfile/subfolder/subfolder1.txt"
+            },
+            {
+              "name": "SHA256ClientSideChecksum",
+              "value": "achecksum"
+            },
+            {
+              "name": "ClientSideFileSize",
+              "value": "0"
             }
           ]
         },
@@ -27,6 +36,14 @@ graphql_ok_multiple_files = b'''{
             {
               "name": "ClientSideOriginalFilepath",
               "value": "testfile/subfolder/subfolder2.txt"
+            },
+            {
+              "name": "SHA256ClientSideChecksum",
+              "value": "achecksum"
+            },
+            {
+              "name": "ClientSideFileSize",
+              "value": "0"
             }
           ]
         }
