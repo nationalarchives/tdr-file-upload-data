@@ -112,5 +112,14 @@ def handler(event, lambda_context):
     return {
         "results": [process_file(file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                    for file in consignment.files if file.fileType == "File"]
+                    for file in consignment.files if file.fileType == "File"],
+        "statuses": [
+            {
+                "id": consignment_id,
+                "statusType": "Consignment",
+                "statusName": "ServerFFID",
+                "statusValue": "InProgress",
+                "overwrite": False
+            }
+        ]
     }

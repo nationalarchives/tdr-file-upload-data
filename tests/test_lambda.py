@@ -29,10 +29,11 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
-        response = lambda_handler.handler(event, None)["results"]
-        response.sort(key=sort_by_id)
-        file_one = response[0]
-        file_two = response[1]
+        response = lambda_handler.handler(event, None)
+        results = response["results"]
+        results.sort(key=sort_by_id)
+        file_one = results[0]
+        file_two = results[1]
         assert file_one["fileId"] == "13702546-da63-4545-a9eb-a892df1aafba"
         assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
         assert file_one["userId"] == user_id
@@ -41,6 +42,14 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
+
+        statuses = response["statuses"]
+        statuses.sort(key=lambda x: x["id"])
+        status_one = statuses[0]
+        assert status_one["id"] == consignment_id
+        assert status_one["statusType"] == "Consignment"
+        assert status_one["statusName"] == "ServerFFID"
+        assert status_one["statusValue"] == "InProgress"
 
 
 @patch('urllib.request.urlopen')
