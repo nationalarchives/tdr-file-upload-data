@@ -19,6 +19,13 @@ def s3():
         yield boto3.client('s3', region_name='eu-west-2')
 
 
+def check_statuses(status, status_name, status_id):
+    assert status["id"] == status_id
+    assert status["statusType"] == "Consignment"
+    assert status["statusName"] == status_name
+    assert status["statusValue"] == "InProgress"
+
+
 @patch('urllib.request.urlopen')
 def test_files_are_returned(mock_url_open, ssm, s3):
     setup_env_vars()
@@ -44,12 +51,11 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_two["consignmentId"] == consignment_id
 
         statuses = response["statuses"]
+        assert len(statuses) == 3
         statuses.sort(key=lambda x: x["id"])
-        status_one = statuses[0]
-        assert status_one["id"] == consignment_id
-        assert status_one["statusType"] == "Consignment"
-        assert status_one["statusName"] == "ServerFFID"
-        assert status_one["statusValue"] == "InProgress"
+        check_statuses(statuses[0], "ServerFFID", consignment_id)
+        check_statuses(statuses[1], "ServerChecksum", consignment_id)
+        check_statuses(statuses[2], "ServerAntivirus", consignment_id)
 
 
 @patch('urllib.request.urlopen')
