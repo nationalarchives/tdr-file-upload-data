@@ -96,6 +96,16 @@ def validate_all_files_uploaded(prefix, consignment: Consignment):
         raise RuntimeError(f"Uploaded files do not match files from the API for {prefix}")
 
 
+def consignment_statuses(consignment_id, status_name, status_value='InProgress'):
+    return {
+        "id": consignment_id,
+        "statusType": "Consignment",
+        "statusName": status_name,
+        "statusValue": status_value,
+        "overwrite": False
+    }
+
+
 def handler(event, lambda_context):
     user_id = event["userId"]
     consignment_id = event["consignmentId"]
@@ -109,8 +119,11 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
+    status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
     return {
         "results": [process_file(file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                    for file in consignment.files if file.fileType == "File"]
+                    for file in consignment.files if file.fileType == "File"],
+
+        "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
     }

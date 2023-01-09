@@ -19,6 +19,13 @@ def s3():
         yield boto3.client('s3', region_name='eu-west-2')
 
 
+def check_statuses(status, status_name, status_id):
+    assert status["id"] == status_id
+    assert status["statusType"] == "Consignment"
+    assert status["statusName"] == status_name
+    assert status["statusValue"] == "InProgress"
+
+
 @patch('urllib.request.urlopen')
 def test_files_are_returned(mock_url_open, ssm, s3):
     setup_env_vars()
@@ -29,10 +36,11 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
-        response = lambda_handler.handler(event, None)["results"]
-        response.sort(key=sort_by_id)
-        file_one = response[0]
-        file_two = response[1]
+        response = lambda_handler.handler(event, None)
+        results = response["results"]
+        results.sort(key=sort_by_id)
+        file_one = results[0]
+        file_two = results[1]
         assert file_one["fileId"] == "13702546-da63-4545-a9eb-a892df1aafba"
         assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
         assert file_one["userId"] == user_id
@@ -41,6 +49,13 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
+
+        statuses = response["statuses"]
+        assert len(statuses) == 3
+        statuses.sort(key=lambda x: x["id"])
+        check_statuses(statuses[0], "ServerFFID", consignment_id)
+        check_statuses(statuses[1], "ServerChecksum", consignment_id)
+        check_statuses(statuses[2], "ServerAntivirus", consignment_id)
 
 
 @patch('urllib.request.urlopen')
