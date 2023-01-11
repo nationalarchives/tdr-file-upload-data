@@ -50,7 +50,7 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
 
-        statuses = response["statuses"]
+        statuses = response["statuses"]["statuses"]
         assert len(statuses) == 3
         statuses.sort(key=lambda x: x["id"])
         check_statuses(statuses[0], "ServerFFID", consignment_id)

@@ -125,5 +125,7 @@ def handler(event, lambda_context):
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
                     for file in consignment.files if file.fileType == "File"],
 
-        "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
+        "statuses": {
+            "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
+        }
     }
