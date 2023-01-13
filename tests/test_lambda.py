@@ -32,7 +32,7 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     setup_ssm(ssm)
     setup_s3(s3)
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
-    event = {'userId': user_id, 'consignmentId': consignment_id}
+    event = {'consignmentId': consignment_id}
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
@@ -70,7 +70,7 @@ def test_error_from_graphql_api(mock_url_open, ssm, s3):
         {'Xpto': 'abc'},
         io.BytesIO(b'xpto'),
     )
-    event = {'userId': user_id, 'consignmentId': consignment_id}
+    event = {'consignmentId': consignment_id}
     configure_mock_urlopen(mock_url_open, err)
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
@@ -84,7 +84,7 @@ def test_error_from_keycloak(ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
     setup_s3(s3)
-    event = {'userId': user_id, 'consignmentId': consignment_id}
+    event = {'consignmentId': consignment_id}
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 500
         with pytest.raises(RuntimeError) as ex:
@@ -96,7 +96,7 @@ def test_error_from_keycloak(ssm, s3):
 def test_error_if_s3_download_error(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
-    event = {'userId': user_id, 'consignmentId': consignment_id}
+    event = {'consignmentId': consignment_id}
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
@@ -112,7 +112,7 @@ def test_error_if_s3_files_mismatch(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
     setup_s3(s3, missing_file_id)
-    event = {'userId': user_id, 'consignmentId': consignment_id}
+    event = {'consignmentId': consignment_id}
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200

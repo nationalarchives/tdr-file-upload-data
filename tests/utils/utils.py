@@ -10,6 +10,7 @@ graphql_ok_multiple_files = b'''{
   "data": {
     "getConsignment": {
       "consignmentType": "standard",
+      "userid": "030cf12c-8d5d-46b9-b86a-38e0920d0e1a",
       "files": [
         {
           "fileId": "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2",
