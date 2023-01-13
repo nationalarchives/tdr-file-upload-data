@@ -21,6 +21,7 @@ class File(Type):
 class Consignment(Connection):
     files = list_of(File)
     consignmentType = Field(str)
+    userid = Field(str)
 
 
 class Query(Type):
@@ -51,6 +52,7 @@ def get_query(consignment_id):
     operation = Operation(Query)
     consignment = operation.getConsignment(consignmentid=consignment_id)
     consignment.consignmentType()
+    consignment.userid()
     files = consignment.files()
     files.fileId()
     files.fileType()
@@ -107,7 +109,6 @@ def consignment_statuses(consignment_id, status_name, status_value='InProgress')
 
 
 def handler(event, lambda_context):
-    user_id = event["userId"]
     consignment_id = event["consignmentId"]
     query = get_query(consignment_id)
     client_secret = get_client_secret()
@@ -118,6 +119,7 @@ def handler(event, lambda_context):
     if 'errors' in data:
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
+    user_id = consignment.userid
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
     return {
