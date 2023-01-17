@@ -97,13 +97,13 @@ def validate_all_files_uploaded(prefix, consignment: Consignment):
     return api_files == s3_files
 
 
-def consignment_statuses(consignment_id, status_name, status_value='InProgress'):
+def consignment_statuses(consignment_id, status_name, status_value='InProgress', overwrite = False):
     return {
         "id": consignment_id,
         "statusType": "Consignment",
         "statusName": status_name,
         "statusValue": status_value,
-        "overwrite": False
+        "overwrite": overwrite
     }
 
 
@@ -122,7 +122,7 @@ def handler(event, lambda_context):
     are_all_files_uploaded = validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
     statuses = [consignment_statuses(consignment_id, status_name) for status_name in status_names]
-    statuses.append(consignment_statuses(consignment_id, "Upload", "Completed"))
+    statuses.append(consignment_statuses(consignment_id, "Upload", "Completed", True))
     if are_all_files_uploaded:
         return {
             "results": [process_file(file) |
@@ -138,7 +138,7 @@ def handler(event, lambda_context):
             "results": [],
             "statuses": {
                 "statuses": [
-                    consignment_statuses(consignment_id, "Upload", "CompletedWithIssues")
+                    consignment_statuses(consignment_id, "Upload", "CompletedWithIssues", True)
                 ]
             }
         }
