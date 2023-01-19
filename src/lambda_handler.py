@@ -94,17 +94,16 @@ def validate_all_files_uploaded(prefix, consignment: Consignment):
     s3_files = s3_list_files(prefix)
     api_files.sort()
     s3_files.sort()
-    if api_files != s3_files:
-        raise RuntimeError(f"Uploaded files do not match files from the API for {prefix}")
+    return api_files == s3_files
 
 
-def consignment_statuses(consignment_id, status_name, status_value='InProgress'):
+def consignment_statuses(consignment_id, status_name, status_value='InProgress', overwrite = False):
     return {
         "id": consignment_id,
         "statusType": "Consignment",
         "statusName": status_name,
         "statusValue": status_value,
-        "overwrite": False
+        "overwrite": overwrite
     }
 
 
@@ -120,14 +119,26 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     user_id = consignment.userid
-    validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
+    are_all_files_uploaded = validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
-    return {
-        "results": [process_file(file) |
-                    {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                    for file in consignment.files if file.fileType == "File"],
+    statuses = [consignment_statuses(consignment_id, status_name) for status_name in status_names]
+    statuses.append(consignment_statuses(consignment_id, "Upload", "Completed", True))
+    if are_all_files_uploaded:
+        return {
+            "results": [process_file(file) |
+                        {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
+                        for file in consignment.files if file.fileType == "File"],
 
-        "statuses": {
-            "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
+            "statuses": {
+                "statuses": statuses
+            }
         }
-    }
+    else:
+        return {
+            "results": [],
+            "statuses": {
+                "statuses": [
+                    consignment_statuses(consignment_id, "Upload", "CompletedWithIssues", True)
+                ]
+            }
+        }
