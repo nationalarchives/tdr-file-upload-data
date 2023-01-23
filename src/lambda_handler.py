@@ -2,9 +2,11 @@ from sgqlc.endpoint.http import HTTPEndpoint
 from sgqlc.operation import Operation
 from sgqlc.types.relay import Connection
 from sgqlc.types import Type, Field, list_of
-from boto3 import client
+from boto3 import resource, client
 import os
 import requests
+import uuid
+import json
 
 
 class FileMetadata(Type):
@@ -69,24 +71,20 @@ def process_file(file: File):
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
-        "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum")
+        "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum"),
+        "fileCheckResults": {
+            "antivirus": [],
+            "checksum": [],
+            "fileFormat": []
+        }
     }
 
 
 def s3_list_files(prefix):
-    s3_client = client("s3")
-    truncated = True
-    marker = ''
-    response = None
-    while truncated:
-        response = s3_client.list_objects(
-            Bucket=os.environ['BUCKET_NAME'],
-            Prefix=prefix,
-            Marker=marker
-        )
-        truncated = response["IsTruncated"]
-        marker = response['Marker'] if truncated else ''
-    return [entry["Key"].split("/")[2] for entry in response["Contents"]]
+    s3 = resource("s3")
+    bucket = s3.Bucket(os.environ['BUCKET_NAME'])
+    objs = bucket.objects.filter(Prefix=prefix)
+    return [entry.key.split("/")[2] for entry in objs]
 
 
 def validate_all_files_uploaded(prefix, consignment: Consignment):
@@ -94,16 +92,32 @@ def validate_all_files_uploaded(prefix, consignment: Consignment):
     s3_files = s3_list_files(prefix)
     api_files.sort()
     s3_files.sort()
-    return api_files == s3_files
+    if api_files != s3_files:
+        raise RuntimeError(f"Uploaded files do not match files from the API for {prefix}")
 
 
-def consignment_statuses(consignment_id, status_name, status_value='InProgress', overwrite = False):
+def consignment_statuses(consignment_id, status_name, status_value='InProgress', overwrite=False):
     return {
         "id": consignment_id,
         "statusType": "Consignment",
         "statusName": status_name,
         "statusValue": status_value,
         "overwrite": overwrite
+    }
+
+
+def write_results_json(json_result, consignment_id):
+    s3 = client("s3")
+    key = f"{consignment_id}/{uuid.uuid4()}/results.json"
+    bucket = os.environ["BACKEND_CHECKS_BUCKET_NAME"]
+    s3.put_object(
+        Body=json_result,
+        Bucket=bucket,
+        Key=key,
+    )
+    return {
+        "key": key,
+        "bucket": bucket
     }
 
 
@@ -119,26 +133,22 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     user_id = consignment.userid
-    are_all_files_uploaded = validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
+    validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
-    statuses = [consignment_statuses(consignment_id, status_name) for status_name in status_names]
-    statuses.append(consignment_statuses(consignment_id, "Upload", "Completed", True))
-    if are_all_files_uploaded:
-        return {
-            "results": [process_file(file) |
-                        {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                        for file in consignment.files if file.fileType == "File"],
-
-            "statuses": {
-                "statuses": statuses
-            }
+    results = {
+        "results": [process_file(file) |
+                    {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
+                    for file in consignment.files if file.fileType == "File"],
+        "statuses": {
+            "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
+        },
+        "redactedResults": {
+            "redactedFiles": [],
+            "errors": []
         }
-    else:
-        return {
-            "results": [],
-            "statuses": {
-                "statuses": [
-                    consignment_statuses(consignment_id, "Upload", "CompletedWithIssues", True)
-                ]
-            }
-        }
+    }
+    bucket_info = write_results_json(json.dumps(results), consignment_id)
+    return {
+        "key": bucket_info["key"],
+        "bucket": bucket_info["bucket"]
+    }

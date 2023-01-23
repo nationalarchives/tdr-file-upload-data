@@ -36,7 +36,8 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
-        response = lambda_handler.handler(event, None)
+        lambda_handler.handler(event, None)
+        response = get_result_from_s3(s3, consignment_id)
         results = response["results"]
         results.sort(key=sort_by_id)
         file_one = results[0]
@@ -51,12 +52,11 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_two["consignmentId"] == consignment_id
 
         statuses = response["statuses"]["statuses"]
-        assert len(statuses) == 4
+        assert len(statuses) == 3
         statuses.sort(key=lambda x: x["id"])
         check_statuses(statuses[0], "ServerFFID", consignment_id)
         check_statuses(statuses[1], "ServerChecksum", consignment_id)
         check_statuses(statuses[2], "ServerAntivirus", consignment_id)
-        check_statuses(statuses[3], "Upload", consignment_id, "Completed")
 
 
 @patch('urllib.request.urlopen')
@@ -118,11 +118,7 @@ def test_error_if_s3_files_mismatch(mock_url_open, ssm, s3):
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token
-        response = lambda_handler.handler(event, None)
-        statuses = response["statuses"]["statuses"]
-
-        assert len(response["results"]) == 0
-        assert len(statuses) == 1
-        assert statuses[0]["statusName"] == "Upload"
-        assert statuses[0]["statusValue"] == "CompletedWithIssues"
+        with pytest.raises(RuntimeError) as ex:
+            lambda_handler.handler(event, None)
+        assert ex.value.args[0] == f'Uploaded files do not match files from the API for {user_id}/{consignment_id}'
 
