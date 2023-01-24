@@ -1,5 +1,6 @@
 import os
 import io
+import json
 
 user_id = '030cf12c-8d5d-46b9-b86a-38e0920d0e1a'
 consignment_id = 'e7073993-0bed-4d5f-bb2a-5bea1b2a87d3'
@@ -65,9 +66,20 @@ def setup_ssm(ssm):
     )
 
 
+def get_result_from_s3(s3, prefix):
+    bucket = 'test-backend-checks-bucket'
+    objects = s3.list_objects(Bucket=bucket, Prefix=prefix + "/")
+    obj = s3.get_object(Bucket='test-backend-checks-bucket', Key=objects['Contents'][0]['Key'])
+    return json.loads(obj['Body'].read().decode("utf-8"))
+
+
 def setup_s3(s3, file_ids=None):
     if file_ids is None:
         file_ids = all_file_ids
+    s3.create_bucket(Bucket='test-backend-checks-bucket',
+                     CreateBucketConfiguration={
+                         'LocationConstraint': 'eu-west-2'
+                     })
     s3.create_bucket(Bucket='test-bucket',
                      CreateBucketConfiguration={
                          'LocationConstraint': 'eu-west-2',
@@ -99,6 +111,7 @@ def setup_env_vars():
     os.environ["API_URL"] = "http://localhost"
     os.environ["BUCKET_NAME"] = "test-bucket"
     os.environ['AWS_DEFAULT_REGION'] = 'eu-west-2'
+    os.environ['BACKEND_CHECKS_BUCKET_NAME'] = "test-backend-checks-bucket"
 
 
 def sort_by_id(file):
