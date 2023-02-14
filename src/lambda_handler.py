@@ -73,6 +73,7 @@ def process_file(file: File):
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
         "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum"),
         "fileCheckResults": {
+            "failures": [],
             "antivirus": [],
             "checksum": [],
             "fileFormat": []
