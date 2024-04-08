@@ -1,7 +1,7 @@
 import urllib
 from unittest.mock import patch
 import pytest
-from moto import mock_ssm, mock_s3
+from moto import mock_aws
 import boto3
 from src import lambda_handler
 from tests.utils.utils import *
@@ -9,13 +9,13 @@ from tests.utils.utils import *
 
 @pytest.fixture(scope='function')
 def ssm():
-    with mock_ssm():
+    with mock_aws():
         yield boto3.client('ssm', region_name='eu-west-2')
 
 
 @pytest.fixture(scope='function')
 def s3():
-    with mock_s3():
+    with mock_aws():
         yield boto3.client('s3', region_name='eu-west-2')
 
 
