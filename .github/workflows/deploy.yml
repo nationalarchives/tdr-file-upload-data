@@ -15,9 +15,12 @@ on:
         description: 'Version to deploy'
         required: true
 
+
+run-name: Deploying File Upload Data Lambda ${{inputs.toDeploy}} to ${{inputs.environment}}
 permissions:
   id-token: write
   contents: write
+  actions: write
 jobs:
   deploy:
     uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_deploy.yml@main
