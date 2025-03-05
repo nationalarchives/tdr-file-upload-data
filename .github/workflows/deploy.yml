@@ -16,14 +16,14 @@ on:
         required: true
 
 
-run-name: Deploying File Upload Data Lambda ${{inputs.toDeploy}} to ${{inputs.environment}}
+run-name: Deploying File Upload Data Lambda ${{inputs.to-deploy}} to ${{inputs.environment}}
 permissions:
   id-token: write
   contents: write
   actions: write
 jobs:
   deploy:
-    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_deploy.yml@new-lambda-s3-structure
+    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_deploy.yml@main
     with:
       lambda-name: file-upload-data
       deployment-package: function.zip
