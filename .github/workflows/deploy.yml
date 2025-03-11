@@ -16,7 +16,7 @@ on:
         required: true
 
 
-run-name: Deploying File Upload Data Lambda ${{inputs.toDeploy}} to ${{inputs.environment}}
+run-name: Deploying File Upload Data Lambda ${{inputs.to-deploy}} to ${{inputs.environment}}
 permissions:
   id-token: write
   contents: write
