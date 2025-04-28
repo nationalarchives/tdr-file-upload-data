@@ -32,7 +32,7 @@ def test_files_are_returned(mock_url_open, ssm, s3):
     setup_ssm(ssm)
     setup_s3(s3)
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
-    event = {'consignmentId': consignment_id, 's3_source_bucket': 'source_bucket'}
+    event = {'consignmentId': consignment_id}
     with patch('src.lambda_handler.requests.post') as mock_post:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json = access_token

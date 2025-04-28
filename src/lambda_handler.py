@@ -1,14 +1,15 @@
+import json
+import os
+import uuid
+from dataclasses import dataclass
+from typing import Optional
+
+import requests
+from boto3 import resource, client
 from sgqlc.endpoint.http import HTTPEndpoint
 from sgqlc.operation import Operation
-from sgqlc.types.relay import Connection
 from sgqlc.types import Type, Field, list_of
-from boto3 import resource, client
-from typing import Optional
-from dataclasses import dataclass
-import os
-import requests
-import uuid
-import json
+from sgqlc.types.relay import Connection
 
 
 class FileMetadata(Type):
@@ -35,7 +36,8 @@ class Query(Type):
 @dataclass(frozen=True)
 class BuildSettings:
     consignment_id: str
-    s3_source_bucket: Optional[str]
+    s3_source_bucket: Optional[str] = None
+    s3_source_bucket_prefix: Optional[str] = None
 
 
 def get_client_secret():
@@ -74,22 +76,10 @@ def get_metadata_value(file, name):
     return [data['value'] for data in file.fileMetadata if data.name == name][0]
 
 
-def process_file(s3_source_bucket, file: File):
-    if s3_source_bucket is not None:
-        return {
-            'sourceBucket': s3_source_bucket,
-            'fileId': file.fileId,
-            'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
-            'fileSize': get_metadata_value(file, "ClientSideFileSize"),
-            "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum"),
-            "fileCheckResults": {
-                "antivirus": [],
-                "checksum": [],
-                "fileFormat": []
-            }
-        }
-    else :
-        return {
+def process_file(s3_source_bucket, prefix, file: File):
+    return {
+        's3SourceBucket': s3_source_bucket,
+        's3SourceBucketKey': f'{prefix}/{file.fileId}',
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
@@ -102,16 +92,16 @@ def process_file(s3_source_bucket, file: File):
     }
 
 
-def s3_list_files(prefix):
+def s3_list_files(s3_source_bucket, prefix):
     s3 = resource("s3")
-    bucket = s3.Bucket(os.environ['BUCKET_NAME'])
+    bucket = s3.Bucket(s3_source_bucket)
     objs = bucket.objects.filter(Prefix=prefix)
-    return [entry.key.split("/")[2] for entry in objs]
+    return [entry.key.rsplit("/", 1)[1] for entry in objs]
 
 
-def validate_all_files_uploaded(prefix, consignment: Consignment):
+def validate_all_files_uploaded(s3_source_bucket, prefix, consignment: Consignment):
     api_files = [file.fileId for file in consignment.files if file.fileType == "File"]
-    s3_files = s3_list_files(prefix)
+    s3_files = s3_list_files(s3_source_bucket, prefix)
     api_files.sort()
     s3_files.sort()
     if api_files != s3_files:
@@ -144,11 +134,14 @@ def write_results_json(json_result, consignment_id):
 
 
 def build_settings(event: dict) -> BuildSettings:
+    dirty_s3_source_bucket = os.environ['BUCKET_NAME']
     consignment_id = event["consignmentId"]
-    s3_source_bucket = event.get("s3_source_bucket", os.environ['BUCKET_NAME'])
+    s3_source_bucket = event.get("s3SourceBucket", dirty_s3_source_bucket)
+    s3_source_bucket_prefix = event.get("s3SourceBucketPrefix", None)
     return BuildSettings(
         consignment_id=consignment_id,
-        s3_source_bucket=s3_source_bucket
+        s3_source_bucket=s3_source_bucket,
+        s3_source_bucket_prefix=s3_source_bucket_prefix
     )
 
 
@@ -167,10 +160,13 @@ def handler(event, lambda_context):
         raise Exception("Error in response", data['errors'])
     consignment = (query + data).getConsignment
     user_id = consignment.userid
-    validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
+    prefix = f"{user_id}/{consignment_id}"
+    if settings.s3_source_bucket_prefix is not None:
+        prefix = settings.s3_source_bucket_prefix
+    validate_all_files_uploaded(s3_source_bucket, prefix, consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
     results = {
-        "results": [process_file(s3_source_bucket, file) |
+        "results": [process_file(s3_source_bucket, prefix, file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
                     for file in consignment.files if file.fileType == "File"],
         "statuses": {
