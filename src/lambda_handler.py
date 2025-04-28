@@ -3,6 +3,8 @@ from sgqlc.operation import Operation
 from sgqlc.types.relay import Connection
 from sgqlc.types import Type, Field, list_of
 from boto3 import resource, client
+from typing import Optional
+from dataclasses import dataclass
 import os
 import requests
 import uuid
@@ -28,6 +30,12 @@ class Consignment(Connection):
 
 class Query(Type):
     getConsignment = Field(Consignment, args={'consignmentid': str})
+
+
+@dataclass(frozen=True)
+class BuildSettings:
+    consignment_id: str
+    s3_source_bucket: Optional[str]
 
 
 def get_client_secret():
@@ -66,8 +74,22 @@ def get_metadata_value(file, name):
     return [data['value'] for data in file.fileMetadata if data.name == name][0]
 
 
-def process_file(file: File):
-    return {
+def process_file(s3_source_bucket, file: File):
+    if s3_source_bucket is not None:
+        return {
+            'sourceBucket': s3_source_bucket,
+            'fileId': file.fileId,
+            'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
+            'fileSize': get_metadata_value(file, "ClientSideFileSize"),
+            "clientChecksum": get_metadata_value(file, "SHA256ClientSideChecksum"),
+            "fileCheckResults": {
+                "antivirus": [],
+                "checksum": [],
+                "fileFormat": []
+            }
+        }
+    else :
+        return {
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
@@ -121,8 +143,20 @@ def write_results_json(json_result, consignment_id):
     }
 
 
-def handler(event, lambda_context):
+def build_settings(event: dict) -> BuildSettings:
     consignment_id = event["consignmentId"]
+    s3_source_bucket = event.get("s3_source_bucket", os.environ['BUCKET_NAME'])
+    return BuildSettings(
+        consignment_id=consignment_id,
+        s3_source_bucket=s3_source_bucket
+    )
+
+
+def handler(event, lambda_context):
+    settings = build_settings(event)
+    consignment_id = settings.consignment_id
+    s3_source_bucket = settings.s3_source_bucket
+
     query = get_query(consignment_id)
     client_secret = get_client_secret()
     api_url = os.environ["API_URL"]
@@ -136,7 +170,7 @@ def handler(event, lambda_context):
     validate_all_files_uploaded(f"{user_id}/{consignment_id}", consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
     results = {
-        "results": [process_file(file) |
+        "results": [process_file(s3_source_bucket, file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
                     for file in consignment.files if file.fileType == "File"],
         "statuses": {
