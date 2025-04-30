@@ -1,12 +1,28 @@
 # TDR File Upload Data
 
 This is the replacement for the tdr-download files lambda. 
-It recieves `{"consignmentId": "xxxx-xxxx-xxxx", "userId": "xxxx-xxxx-xxxx"}` as input and then:
+It receives `{"consignmentId": "xxxx-xxxx-xxxx", "userId": "xxxx-xxxx-xxxx"}` as input with optional fields `s3SourceBucket` and `s3SourceBucketKey` then:
 
 * Calls the API to get a list of fileIds and original path data
 * Gets the list of files from S3
 * Compares the two and throws an error if there is a mismatch
-* Returns `[{"consignmentId": "xxxx-xxxx-xxxx", "fileId": "xxxx-xxxx-xxxx" , "originalPath": "/original/file/path", "userId": "xxxx-xxxx-xxxx"}]`
+* Returns:
+    ```
+    [
+        {
+            "consignmentId": "xxxx-xxxx-xxxx",
+            "fileId": "xxxx-xxxx-xxxx" ,
+            "originalPath": "/original/file/path",
+            "userId": "xxxx-xxxx-xxxx",
+            "s3SourceBucket": "{bucket name}",
+            "s3SourceBucketKey": "{key prefix}/{file id}"
+        },
+        ... etc ...
+     ]
+    ```
+
+* Optional input fields `s3SourceBucket` and `s3SourceBucketKey` will use default values if not present in the input
+
 This array will then be passed to the map function in the step function which will call each of the backend checks in turn.
   
 ## Running locally
