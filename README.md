@@ -1,7 +1,7 @@
 # TDR File Upload Data
 
 This is the replacement for the tdr-download files lambda. 
-It receives `{"consignmentId": "xxxx-xxxx-xxxx", "userId": "xxxx-xxxx-xxxx"}` as input with optional fields `s3SourceBucket` and `s3SourceBucketKey` then:
+It receives `{"consignmentId": "xxxx-xxxx-xxxx"}` as input with optional fields `s3SourceBucket` and `s3SourceBucketKey` then:
 
 * Calls the API to get a list of fileIds and original path data
 * Gets the list of files from S3
