@@ -7,6 +7,7 @@ consignment_id = 'e7073993-0bed-4d5f-bb2a-5bea1b2a87d3'
 file_one_id = "13702546-da63-4545-a9eb-a892df1aafba"
 file_two_id = "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2"
 all_file_ids = [file_two_id, file_one_id]
+all_match_ids = ["matchId1", "matchId2"]
 missing_file_id = [file_two_id]
 
 graphql_ok_multiple_files = b'''{
@@ -17,6 +18,7 @@ graphql_ok_multiple_files = b'''{
       "files": [
         {
           "fileId": "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2",
+          "matchId": "matchId1",
           "fileType": "File",
           "fileMetadata": [
             {
@@ -35,6 +37,7 @@ graphql_ok_multiple_files = b'''{
         },
         {
           "fileId": "13702546-da63-4545-a9eb-a892df1aafba",
+          "matchId": "matchId2",
           "fileType": "File",
           "fileMetadata": [
             {
@@ -75,9 +78,11 @@ def get_result_from_s3(s3, prefix):
     return json.loads(obj['Body'].read().decode("utf-8"))
 
 
-def setup_s3(s3, file_ids=None, bucket='test-bucket', prefix=None):
+def setup_s3(s3, file_ids=None, match_ids=None, bucket='test-bucket', prefix=None):
     if file_ids is None:
         file_ids = all_file_ids
+    if match_ids is None:
+        match_ids = all_match_ids
     if prefix is None:
         prefix = f"{user_id}/{consignment_id}/"
     s3.create_bucket(Bucket='test-backend-checks-bucket',
@@ -98,6 +103,13 @@ def setup_s3(s3, file_ids=None, bucket='test-bucket', prefix=None):
             Body=b'filetoupload',
             Bucket=f'{bucket}',
             Key=f"{prefix}{file_id}",
+        )
+    for match_id in match_ids:
+        s3.delete_object(Bucket="test-bucket", Key=f"sharepoint/prefix/{match_id}")
+        s3.put_object(
+            Body=b'filetoupload',
+            Bucket=f'{bucket}',
+            Key=f"sharepoint/prefix/{match_id}",
         )
 
 
