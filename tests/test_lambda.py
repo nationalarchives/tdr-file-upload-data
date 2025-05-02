@@ -38,48 +38,48 @@ def validate_statuses_response(response):
     check_statuses(statuses[2], "ServerAntivirus", consignment_id)
 
 
-# def test_get_object_identifier_returns_default():
-#     file =  File({"fileId": file_one_id, "matchId": "matchId1"})
-#     res = lambda_handler.get_object_identifier("default/prefix", file)
-#     assert res == file_one_id
-#
-#
-# def test_get_object_identifier_returns_match_id_for_sharepoint_prefix():
-#     file =  File({"fileId": file_one_id, "matchId": "matchId1"})
-#     res = lambda_handler.get_object_identifier("sharepoint/prefix", file)
-#     assert res == "matchId1"
+def test_get_object_identifier_returns_default():
+    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("default/prefix", file)
+    assert res == file_one_id
 
 
-# @patch('urllib.request.urlopen')
-# def test_files_are_returned(mock_url_open, ssm, s3):
-#     setup_env_vars()
-#     setup_ssm(ssm)
-#     setup_s3(s3)
-#     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
-#     event = {'consignmentId': consignment_id}
-#     with patch('src.lambda_handler.requests.post') as mock_post:
-#         mock_post.return_value.status_code = 200
-#         mock_post.return_value.json = access_token
-#         lambda_handler.handler(event, None)
-#         response = get_result_from_s3(s3, consignment_id)
-#         results = response["results"]
-#         results.sort(key=sort_by_id)
-#         file_one = results[0]
-#         file_two = results[1]
-#         assert file_one["fileId"] == file_one_id
-#         assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
-#         assert file_one["userId"] == user_id
-#         assert file_one["consignmentId"] == consignment_id
-#         assert file_one["s3SourceBucket"] == "test-bucket"
-#         assert file_one["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_one_id}"
-#         assert file_two["fileId"] == file_two_id
-#         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
-#         assert file_two["userId"] == user_id
-#         assert file_two["consignmentId"] == consignment_id
-#         assert file_two["s3SourceBucket"] == "test-bucket"
-#         assert file_two["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_two_id}"
-#
-#         validate_statuses_response(response)
+def test_get_object_identifier_returns_match_id_for_sharepoint_prefix():
+    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("sharepoint/prefix", file)
+    assert res == "matchId1"
+
+
+@patch('urllib.request.urlopen')
+def test_files_are_returned(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    setup_s3(s3)
+    configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
+    event = {'consignmentId': consignment_id}
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        lambda_handler.handler(event, None)
+        response = get_result_from_s3(s3, consignment_id)
+        results = response["results"]
+        results.sort(key=sort_by_id)
+        file_one = results[0]
+        file_two = results[1]
+        assert file_one["fileId"] == file_one_id
+        assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
+        assert file_one["userId"] == user_id
+        assert file_one["consignmentId"] == consignment_id
+        assert file_one["s3SourceBucket"] == "test-bucket"
+        assert file_one["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_one_id}"
+        assert file_two["fileId"] == file_two_id
+        assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
+        assert file_two["userId"] == user_id
+        assert file_two["consignmentId"] == consignment_id
+        assert file_two["s3SourceBucket"] == "test-bucket"
+        assert file_two["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_two_id}"
+
+        validate_statuses_response(response)
 
 
 @patch('urllib.request.urlopen')
@@ -97,6 +97,7 @@ def test_files_are_returned_with_s3_source_overrides(mock_url_open, ssm, s3):
         lambda_handler.handler(event_with_s3_overrides, None)
         response = get_result_from_s3(s3, consignment_id)
         results = response["results"]
+        print(f"RESULTS: {results}")
         results.sort(key=sort_by_id)
         file_one = results[0]
         file_two = results[1]
@@ -105,76 +106,76 @@ def test_files_are_returned_with_s3_source_overrides(mock_url_open, ssm, s3):
         assert file_one["userId"] == user_id
         assert file_one["consignmentId"] == consignment_id
         assert file_one["s3SourceBucket"] == override_bucket
-        assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_id}"
+        assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_match_id}"
         assert file_two["fileId"] == file_two_id
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
         assert file_two["s3SourceBucket"] == override_bucket
-        assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_id}"
+        assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_match_id}"
 
         validate_statuses_response(response)
-#
-#
-# @patch('urllib.request.urlopen')
-# def test_error_from_graphql_api(mock_url_open, ssm, s3):
-#     setup_env_vars()
-#     setup_ssm(ssm)
-#     setup_s3(s3)
-#     err = urllib.error.HTTPError(
-#         'http://testserver.com',
-#         500,
-#         'Some Error',
-#         {'Xpto': 'abc'},
-#         io.BytesIO(b'xpto'),
-#     )
-#     event = {'consignmentId': consignment_id}
-#     configure_mock_urlopen(mock_url_open, err)
-#     with patch('src.lambda_handler.requests.post') as mock_post:
-#         mock_post.return_value.status_code = 200
-#         mock_post.return_value.json = access_token
-#         with pytest.raises(Exception) as ex:
-#             lambda_handler.handler(event, None)
-#         assert ex.value.args[1][0]['message'] == 'HTTP Error 500: Some Error'
-#
-#
-# def test_error_from_keycloak(ssm, s3):
-#     setup_env_vars()
-#     setup_ssm(ssm)
-#     setup_s3(s3)
-#     event = {'consignmentId': consignment_id}
-#     with patch('src.lambda_handler.requests.post') as mock_post:
-#         mock_post.return_value.status_code = 500
-#         with pytest.raises(RuntimeError) as ex:
-#             lambda_handler.handler(event, None)
-#         assert ex.value.args[0] == 'Non 200 status from Keycloak 500'
-#
-#
-# @patch('urllib.request.urlopen')
-# def test_error_if_s3_download_error(mock_url_open, ssm, s3):
-#     setup_env_vars()
-#     setup_ssm(ssm)
-#     event = {'consignmentId': consignment_id}
-#     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
-#     with patch('src.lambda_handler.requests.post') as mock_post:
-#         mock_post.return_value.status_code = 200
-#         mock_post.return_value.json = access_token
-#         with pytest.raises(s3.exceptions.NoSuchBucket) as ex:
-#             lambda_handler.handler(event, None)
-#
-#         assert ex.value.response['Error']['Message'] == 'The specified bucket does not exist'
-#
-#
-# @patch('urllib.request.urlopen')
-# def test_error_if_s3_files_mismatch(mock_url_open, ssm, s3):
-#     setup_env_vars()
-#     setup_ssm(ssm)
-#     setup_s3(s3, missing_file_id)
-#     event = {'consignmentId': consignment_id}
-#     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
-#     with patch('src.lambda_handler.requests.post') as mock_post:
-#         mock_post.return_value.status_code = 200
-#         mock_post.return_value.json = access_token
-#         with pytest.raises(RuntimeError) as ex:
-#             lambda_handler.handler(event, None)
-#         assert ex.value.args[0] == f'Uploaded files do not match files from the API for {user_id}/{consignment_id}'
+
+
+@patch('urllib.request.urlopen')
+def test_error_from_graphql_api(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    setup_s3(s3)
+    err = urllib.error.HTTPError(
+        'http://testserver.com',
+        500,
+        'Some Error',
+        {'Xpto': 'abc'},
+        io.BytesIO(b'xpto'),
+    )
+    event = {'consignmentId': consignment_id}
+    configure_mock_urlopen(mock_url_open, err)
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        with pytest.raises(Exception) as ex:
+            lambda_handler.handler(event, None)
+        assert ex.value.args[1][0]['message'] == 'HTTP Error 500: Some Error'
+
+
+def test_error_from_keycloak(ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    setup_s3(s3)
+    event = {'consignmentId': consignment_id}
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 500
+        with pytest.raises(RuntimeError) as ex:
+            lambda_handler.handler(event, None)
+        assert ex.value.args[0] == 'Non 200 status from Keycloak 500'
+
+
+@patch('urllib.request.urlopen')
+def test_error_if_s3_download_error(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    event = {'consignmentId': consignment_id}
+    configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        with pytest.raises(s3.exceptions.NoSuchBucket) as ex:
+            lambda_handler.handler(event, None)
+
+        assert ex.value.response['Error']['Message'] == 'The specified bucket does not exist'
+
+
+@patch('urllib.request.urlopen')
+def test_error_if_s3_files_mismatch(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    setup_s3(s3, missing_file_id)
+    event = {'consignmentId': consignment_id}
+    configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        with pytest.raises(RuntimeError) as ex:
+            lambda_handler.handler(event, None)
+        assert ex.value.args[0] == f'Uploaded files do not match files from the API for {user_id}/{consignment_id}'

@@ -6,8 +6,10 @@ user_id = '030cf12c-8d5d-46b9-b86a-38e0920d0e1a'
 consignment_id = 'e7073993-0bed-4d5f-bb2a-5bea1b2a87d3'
 file_one_id = "13702546-da63-4545-a9eb-a892df1aafba"
 file_two_id = "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2"
+file_one_match_id = "matchId1"
+file_two_match_id = "matchId2"
 all_file_ids = [file_two_id, file_one_id]
-all_match_ids = ["matchId1", "matchId2"]
+all_match_ids = [file_two_match_id, file_one_match_id]
 missing_file_id = [file_two_id]
 
 graphql_ok_multiple_files = b'''{
@@ -18,7 +20,7 @@ graphql_ok_multiple_files = b'''{
       "files": [
         {
           "fileId": "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2",
-          "matchId": "matchId1",
+          "matchId": "matchId2",
           "fileType": "File",
           "fileMetadata": [
             {
@@ -37,7 +39,7 @@ graphql_ok_multiple_files = b'''{
         },
         {
           "fileId": "13702546-da63-4545-a9eb-a892df1aafba",
-          "matchId": "matchId2",
+          "matchId": "matchId1",
           "fileType": "File",
           "fileMetadata": [
             {
@@ -79,12 +81,13 @@ def get_result_from_s3(s3, prefix):
 
 
 def setup_s3(s3, file_ids=None, match_ids=None, bucket='test-bucket', prefix=None):
-    if file_ids is None:
-        file_ids = all_file_ids
-    if match_ids is None:
-        match_ids = all_match_ids
+    object_ids = []
     if prefix is None:
         prefix = f"{user_id}/{consignment_id}/"
+    if "sharepoint" in prefix and match_ids is None:
+        object_ids = all_match_ids
+    elif file_ids is None:
+        object_ids = all_file_ids
     s3.create_bucket(Bucket='test-backend-checks-bucket',
                      CreateBucketConfiguration={
                          'LocationConstraint': 'eu-west-2'
@@ -97,19 +100,12 @@ def setup_s3(s3, file_ids=None, match_ids=None, bucket='test-bucket', prefix=Non
                      CreateBucketConfiguration={
                          'LocationConstraint': 'eu-west-2',
                      })
-    for file_id in file_ids:
-        s3.delete_object(Bucket="test-bucket", Key=f"{prefix}{file_id}")
+    for object_id in object_ids:
+        s3.delete_object(Bucket=bucket, Key=f"{prefix}{object_id}")
         s3.put_object(
             Body=b'filetoupload',
             Bucket=f'{bucket}',
-            Key=f"{prefix}{file_id}",
-        )
-    for match_id in match_ids:
-        s3.delete_object(Bucket="test-bucket", Key=f"sharepoint/prefix/{match_id}")
-        s3.put_object(
-            Body=b'filetoupload',
-            Bucket=f'{bucket}',
-            Key=f"sharepoint/prefix/{match_id}",
+            Key=f"{prefix}{object_id}",
         )
 
 

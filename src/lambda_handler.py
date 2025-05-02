@@ -79,7 +79,6 @@ def get_metadata_value(file, name):
 
 
 def get_object_identifier(prefix, file: File):
-    print(file)
     obj_identifier = file.fileId
     if "sharepoint" in prefix:
         obj_identifier = file.matchId
