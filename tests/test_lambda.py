@@ -1,10 +1,14 @@
 import urllib
 from unittest.mock import patch
+
+import boto3
 import pytest
 from moto import mock_aws
-import boto3
+
 from src import lambda_handler
+from src.lambda_handler import File
 from tests.utils.utils import *
+from sgqlc.types import Field
 
 
 @pytest.fixture(scope='function')
@@ -33,6 +37,18 @@ def validate_statuses_response(response):
     check_statuses(statuses[0], "ServerFFID", consignment_id)
     check_statuses(statuses[1], "ServerChecksum", consignment_id)
     check_statuses(statuses[2], "ServerAntivirus", consignment_id)
+
+
+def test_get_object_identifier_returns_default():
+    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("default/prefix", file)
+    assert res == file_one_id
+
+
+def test_get_object_identifier_returns_match_id_for_sharepoint_prefix():
+    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("sharepoint/prefix", file)
+    assert res == "matchId1"
 
 
 @patch('urllib.request.urlopen')
@@ -72,7 +88,7 @@ def test_files_are_returned_with_s3_source_overrides(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
     override_bucket = 'override-bucket'
-    override_key_prefix = 'key/prefix'
+    override_key_prefix = 'sharepoint/prefix'
     setup_s3(s3, bucket=override_bucket, prefix=f'{override_key_prefix}/')
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
     event_with_s3_overrides = {'consignmentId': consignment_id, "s3SourceBucket": override_bucket, "s3SourceBucketPrefix": override_key_prefix}
@@ -90,13 +106,13 @@ def test_files_are_returned_with_s3_source_overrides(mock_url_open, ssm, s3):
         assert file_one["userId"] == user_id
         assert file_one["consignmentId"] == consignment_id
         assert file_one["s3SourceBucket"] == override_bucket
-        assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_id}"
+        assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_match_id}"
         assert file_two["fileId"] == file_two_id
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
         assert file_two["s3SourceBucket"] == override_bucket
-        assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_id}"
+        assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_match_id}"
 
         validate_statuses_response(response)
 
