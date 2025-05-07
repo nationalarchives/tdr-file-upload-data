@@ -19,7 +19,7 @@ class FileMetadata(Type):
 
 class File(Type):
     fileId = Field(str)
-    matchId = Field(str)
+    uploadMatchId = Field(str)
     fileType = Field(str)
     fileMetadata = list_of(FileMetadata)
 
@@ -68,7 +68,7 @@ def get_query(consignment_id):
     consignment.userid()
     files = consignment.files()
     files.fileId()
-    files.matchId()
+    files.uploadMatchId()
     files.fileType()
     files.fileMetadata()
     return operation
@@ -81,7 +81,7 @@ def get_metadata_value(file, name):
 def get_object_identifier(prefix, file: File):
     obj_identifier = file.fileId
     if "sharepoint" in prefix:
-        obj_identifier = file.matchId
+        obj_identifier = file.uploadMatchId
     return obj_identifier
 
 

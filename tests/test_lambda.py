@@ -40,13 +40,13 @@ def validate_statuses_response(response):
 
 
 def test_get_object_identifier_returns_default():
-    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    file =  File({"fileId": file_one_id, "uploadMatchId": "matchId1"})
     res = lambda_handler.get_object_identifier("default/prefix", file)
     assert res == file_one_id
 
 
 def test_get_object_identifier_returns_match_id_for_sharepoint_prefix():
-    file =  File({"fileId": file_one_id, "matchId": "matchId1"})
+    file =  File({"fileId": file_one_id, "uploadMatchId": "matchId1"})
     res = lambda_handler.get_object_identifier("sharepoint/prefix", file)
     assert res == "matchId1"
 

@@ -21,7 +21,7 @@ graphql_ok_multiple_files = b'''{
       "files": [
         {
           "fileId": "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2",
-          "matchId": "matchId2",
+          "uploadMatchId": "matchId2",
           "fileType": "File",
           "fileMetadata": [
             {
@@ -40,7 +40,7 @@ graphql_ok_multiple_files = b'''{
         },
         {
           "fileId": "13702546-da63-4545-a9eb-a892df1aafba",
-          "matchId": "matchId1",
+          "uploadMatchId": "matchId1",
           "fileType": "File",
           "fileMetadata": [
             {
