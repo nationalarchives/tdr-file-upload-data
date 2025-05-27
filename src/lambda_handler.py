@@ -19,6 +19,7 @@ class FileMetadata(Type):
 
 class File(Type):
     fileId = Field(str)
+    uploadMatchId = Field(str)
     fileType = Field(str)
     fileMetadata = list_of(FileMetadata)
 
@@ -67,6 +68,7 @@ def get_query(consignment_id):
     consignment.userid()
     files = consignment.files()
     files.fileId()
+    files.uploadMatchId()
     files.fileType()
     files.fileMetadata()
     return operation
@@ -76,10 +78,18 @@ def get_metadata_value(file, name):
     return [data['value'] for data in file.fileMetadata if data.name == name][0]
 
 
+def get_object_identifier(prefix, file: File):
+    obj_identifier = file.fileId
+    if "sharepoint" in prefix:
+        obj_identifier = file.uploadMatchId
+    return obj_identifier
+
+
 def process_file(s3_source_bucket, prefix, file: File):
+    obj_identifier = get_object_identifier(prefix, file)
     return {
         's3SourceBucket': s3_source_bucket,
-        's3SourceBucketKey': f'{prefix}/{file.fileId}',
+        's3SourceBucketKey': f'{prefix}/{obj_identifier}',
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
@@ -100,7 +110,7 @@ def s3_list_files(s3_source_bucket, prefix):
 
 
 def validate_all_files_uploaded(s3_source_bucket, prefix, consignment: Consignment):
-    api_files = [file.fileId for file in consignment.files if file.fileType == "File"]
+    api_files = [get_object_identifier(prefix, file) for file in consignment.files if file.fileType == "File"]
     s3_files = s3_list_files(s3_source_bucket, prefix)
     api_files.sort()
     s3_files.sort()
