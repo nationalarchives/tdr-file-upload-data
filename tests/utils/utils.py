@@ -114,7 +114,9 @@ def configure_mock_urlopen(mock_urlopen, payload):
     if isinstance(payload, Exception):
         mock_urlopen.side_effect = payload
     else:
-        mock_urlopen.return_value = io.BytesIO(payload)
+        mock_response = io.BytesIO(payload)
+        mock_response.headers = {'Content-Type': 'application/json'}
+        mock_urlopen.return_value = mock_response
 
 
 def access_token():
