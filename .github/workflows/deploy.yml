@@ -23,7 +23,7 @@ permissions:
   actions: write
 jobs:
   deploy:
-    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_deploy.yml@main
+    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_deploy.yml@1c56dd1e838340ab53c7dc55dbbb974a062a6ae9 # v0.0.6
     with:
       lambda-name: file-upload-data
       deployment-package: function.zip
