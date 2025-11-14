@@ -51,6 +51,12 @@ def test_get_object_identifier_returns_match_id_for_sharepoint_prefix():
     assert res == "matchId1"
 
 
+def test_get_object_identifier_returns_match_id_for_harddrive_prefix():
+    file =  File({"fileId": file_one_id, "uploadMatchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("harddrive/prefix", file)
+    assert res == "matchId1"
+
+
 @patch('urllib.request.urlopen')
 def test_files_are_returned(mock_url_open, ssm, s3):
     setup_env_vars()
@@ -84,11 +90,45 @@ def test_files_are_returned(mock_url_open, ssm, s3):
 
 
 @patch('urllib.request.urlopen')
-def test_files_are_returned_with_s3_source_overrides(mock_url_open, ssm, s3):
+def test_files_are_returned_with_s3_source_overrides_sharepoint(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
     override_bucket = 'override-bucket'
     override_key_prefix = 'sharepoint/prefix'
+    setup_s3(s3, bucket=override_bucket, prefix=f'{override_key_prefix}/')
+    configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
+    event_with_s3_overrides = {'consignmentId': consignment_id, "s3SourceBucket": override_bucket, "s3SourceBucketPrefix": override_key_prefix}
+    with patch('src.lambda_handler.requests.post') as mock_post:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json = access_token
+        lambda_handler.handler(event_with_s3_overrides, None)
+        response = get_result_from_s3(s3, consignment_id)
+        results = response["results"]
+        results.sort(key=sort_by_id)
+        file_one = results[0]
+        file_two = results[1]
+        assert file_one["fileId"] == file_one_id
+        assert file_one["originalPath"] == "testfile/subfolder/subfolder2.txt"
+        assert file_one["userId"] == user_id
+        assert file_one["consignmentId"] == consignment_id
+        assert file_one["s3SourceBucket"] == override_bucket
+        assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_match_id}"
+        assert file_two["fileId"] == file_two_id
+        assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
+        assert file_two["userId"] == user_id
+        assert file_two["consignmentId"] == consignment_id
+        assert file_two["s3SourceBucket"] == override_bucket
+        assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_match_id}"
+
+        validate_statuses_response(response)
+
+
+@patch('urllib.request.urlopen')
+def test_files_are_returned_with_s3_source_overrides_harddrive(mock_url_open, ssm, s3):
+    setup_env_vars()
+    setup_ssm(ssm)
+    override_bucket = 'override-bucket'
+    override_key_prefix = 'harddrive/prefix'
     setup_s3(s3, bucket=override_bucket, prefix=f'{override_key_prefix}/')
     configure_mock_urlopen(mock_url_open, graphql_ok_multiple_files)
     event_with_s3_overrides = {'consignmentId': consignment_id, "s3SourceBucket": override_bucket, "s3SourceBucketPrefix": override_key_prefix}

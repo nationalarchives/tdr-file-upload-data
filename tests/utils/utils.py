@@ -81,11 +81,15 @@ def get_result_from_s3(s3, prefix):
     return json.loads(obj['Body'].read().decode("utf-8"))
 
 
+def _override_object_identifier(prefix: str):
+    return "sharepoint" in prefix or "harddrive" in prefix
+
+
 def setup_s3(s3, file_ids=None, match_ids=None, bucket='test-bucket', prefix=None):
     object_ids = []
     if prefix is None:
         prefix = f"{user_id}/{consignment_id}/"
-    if "sharepoint" in prefix and match_ids is None:
+    if _override_object_identifier(prefix) and match_ids is None:
             object_ids = all_match_ids
     elif file_ids is None:
         object_ids = all_file_ids
