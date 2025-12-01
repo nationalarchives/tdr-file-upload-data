@@ -6,10 +6,12 @@ user_id = '030cf12c-8d5d-46b9-b86a-38e0920d0e1a'
 consignment_id = 'e7073993-0bed-4d5f-bb2a-5bea1b2a87d3'
 file_one_id = "13702546-da63-4545-a9eb-a892df1aafba"
 file_two_id = "1c2b9eeb-2e4c-4cfc-bc08-c193660f86d2"
+retained_file_id = "ed7503ae-d2cc-4fd1-bd1e-de514e424555"
 all_file_ids = [file_two_id, file_one_id]
 missing_file_id = [file_two_id]
 file_one_match_id = "matchId1"
 file_two_match_id = "matchId2"
+retained_file_match_id = "matchId3"
 all_match_ids = [file_two_match_id, file_one_match_id]
 
 
@@ -55,6 +57,18 @@ graphql_ok_multiple_files = b'''{
               "name": "ClientSideFileSize",
               "value": "0"
             }
+          ]
+        },
+        {
+          "fileId": "ed7503ae-d2cc-4fd1-bd1e-de514e424555",
+          "uploadMatchId": "matchId3",
+          "fileType": "File",
+          "retained": true,
+          "fileMetadata": [
+            {
+              "name": "ClientSideOriginalFilepath",
+              "value": "testfile/subfolder/subfolder2.txt"
+            }           
           ]
         }
       ]

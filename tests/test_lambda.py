@@ -58,7 +58,7 @@ def test_get_object_identifier_returns_match_id_for_harddrive_prefix():
 
 
 @patch('urllib.request.urlopen')
-def test_files_are_returned(mock_url_open, ssm, s3):
+def test_files_are_returned_with_retained_excluded(mock_url_open, ssm, s3):
     setup_env_vars()
     setup_ssm(ssm)
     setup_s3(s3)

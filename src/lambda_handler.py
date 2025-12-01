@@ -21,6 +21,7 @@ class File(Type):
     fileId = Field(str)
     uploadMatchId = Field(str)
     fileType = Field(str)
+    retained = Field(bool)
     fileMetadata = list_of(FileMetadata)
 
 
@@ -71,6 +72,7 @@ def get_query(consignment_id):
     files.uploadMatchId()
     files.fileType()
     files.fileMetadata()
+    files.retained()
     return operation
 
 
@@ -113,8 +115,15 @@ def s3_list_files(s3_source_bucket, prefix):
     return [entry.key.rsplit("/", 1)[1] for entry in objs]
 
 
+def _is_file_to_process(file: File) -> bool:
+    retained = False
+    if hasattr(file, 'retained'):
+        retained = file.retained
+    return file.fileType == "File" and not retained
+
+
 def validate_all_files_uploaded(s3_source_bucket, prefix, consignment: Consignment):
-    api_files = [get_object_identifier(prefix, file) for file in consignment.files if file.fileType == "File"]
+    api_files = [get_object_identifier(prefix, file) for file in consignment.files if _is_file_to_process(file)]
     s3_files = s3_list_files(s3_source_bucket, prefix)
     api_files.sort()
     s3_files.sort()
@@ -182,7 +191,7 @@ def handler(event, lambda_context):
     results = {
         "results": [process_file(s3_source_bucket, prefix, file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                    for file in consignment.files if file.fileType == "File"],
+                    for file in consignment.files if _is_file_to_process(file)],
         "statuses": {
             "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
         },
