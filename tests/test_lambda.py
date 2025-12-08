@@ -32,11 +32,12 @@ def check_statuses(status, status_name, status_id, status_value = "InProgress"):
 
 def validate_statuses_response(response):
     statuses = response["statuses"]["statuses"]
-    assert len(statuses) == 3
+    assert len(statuses) == 4
     statuses.sort(key=lambda x: x["id"])
     check_statuses(statuses[0], "ServerFFID", consignment_id)
     check_statuses(statuses[1], "ServerChecksum", consignment_id)
     check_statuses(statuses[2], "ServerAntivirus", consignment_id)
+    check_statuses(statuses[3], "ServerRedaction", consignment_id)
 
 
 def test_get_object_identifier_returns_default():

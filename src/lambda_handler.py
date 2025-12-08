@@ -178,7 +178,7 @@ def handler(event, lambda_context):
     if settings.s3_source_bucket_prefix is not None:
         prefix = settings.s3_source_bucket_prefix
     validate_all_files_uploaded(s3_source_bucket, prefix, consignment)
-    status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus']
+    status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus', 'ServerRedaction']
     results = {
         "results": [process_file(s3_source_bucket, prefix, file) |
                     {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
