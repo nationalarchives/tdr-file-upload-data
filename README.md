@@ -43,9 +43,9 @@ Run `lambda_runner.py`
 ## Running the tests
 The tests can be run in PyCharm by creating [a pytest configuration](https://www.jetbrains.com/help/pycharm/run-debug-configuration-py-test.html).
 
-They can also be run in the terminal. You need python3.9 running on your system.
+They can also be run in the terminal. You need python3 running on your system.
 ```bash
-python3.9 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 python -m pytest 
