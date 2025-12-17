@@ -58,6 +58,12 @@ def test_get_object_identifier_returns_match_id_for_harddrive_prefix():
     assert res == "matchId1"
 
 
+def test_get_object_identifier_returns_match_id_for_networkdrive_prefix():
+    file =  File({"fileId": file_one_id, "uploadMatchId": "matchId1"})
+    res = lambda_handler.get_object_identifier("networkdrive/prefix", file)
+    assert res == "matchId1"
+
+
 @patch('urllib.request.urlopen')
 def test_files_are_returned(mock_url_open, ssm, s3):
     setup_env_vars()
