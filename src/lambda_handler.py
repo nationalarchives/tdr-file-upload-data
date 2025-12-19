@@ -79,7 +79,8 @@ def get_metadata_value(file, name):
 
 
 def _override_object_identifier(prefix: str):
-    return "sharepoint" in prefix or "harddrive" in prefix
+    override_prefixes = {"sharepoint", "harddrive", "networkdrive"}
+    return any(s in prefix for s in override_prefixes)
 
 
 def get_object_identifier(prefix, file: File):
