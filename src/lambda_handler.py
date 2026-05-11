@@ -39,6 +39,8 @@ class BuildSettings:
     consignment_id: str
     s3_source_bucket: Optional[str] = None
     s3_source_bucket_prefix: Optional[str] = None
+    s3_quarantine_bucket: Optional[str] = None
+    s3_clean_destination_bucket: Optional[str] = None
 
 
 def get_client_secret():
@@ -90,11 +92,15 @@ def get_object_identifier(prefix, file: File):
     return obj_identifier
 
 
-def process_file(s3_source_bucket, prefix, file: File):
+def process_file(s3_source_bucket, s3_quarantine_bucket, s3_clean_destination_bucket, prefix, file: File):
     obj_identifier = get_object_identifier(prefix, file)
     return {
         's3SourceBucket': s3_source_bucket,
         's3SourceBucketKey': f'{prefix}/{obj_identifier}',
+        's3QuarantineBucket': s3_quarantine_bucket,
+        's3QuarantineBucketKey': f'{prefix}/{obj_identifier}',
+        's3CleanDestinationBucket': s3_clean_destination_bucket,
+        's3CleanDestinationBucketKey': f'{prefix}/{obj_identifier}',
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
@@ -150,13 +156,17 @@ def write_results_json(json_result, consignment_id):
 
 def build_settings(event: dict) -> BuildSettings:
     dirty_s3_source_bucket = os.environ['BUCKET_NAME']
+    s3_quarantine_bucket = os.environ['QUARANTINE_BUCKET_NAME']
+    s3_clean_destination_bucket = os.environ['CLEAN_DESTINATION_BUCKET_NAME']
     consignment_id = event["consignmentId"]
     s3_source_bucket = event.get("s3SourceBucket", dirty_s3_source_bucket)
     s3_source_bucket_prefix = event.get("s3SourceBucketPrefix", None)
     return BuildSettings(
         consignment_id=consignment_id,
         s3_source_bucket=s3_source_bucket,
-        s3_source_bucket_prefix=s3_source_bucket_prefix
+        s3_source_bucket_prefix=s3_source_bucket_prefix,
+        s3_quarantine_bucket=s3_quarantine_bucket,
+        s3_clean_destination_bucket=s3_clean_destination_bucket
     )
 
 
@@ -181,9 +191,15 @@ def handler(event, lambda_context):
     validate_all_files_uploaded(s3_source_bucket, prefix, consignment)
     status_names = ['ServerFFID', 'ServerChecksum', 'ServerAntivirus', 'ServerRedaction']
     results = {
-        "results": [process_file(s3_source_bucket, prefix, file) |
-                    {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
-                    for file in consignment.files if file.fileType == "File"],
+        "results": [
+            process_file(
+                s3_source_bucket,
+                settings.s3_quarantine_bucket,
+                settings.s3_clean_destination_bucket,
+                prefix,
+                file) |
+            {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
+            for file in consignment.files if file.fileType == "File"],
         "statuses": {
             "statuses": [consignment_statuses(consignment_id, status_name) for status_name in status_names]
         },
