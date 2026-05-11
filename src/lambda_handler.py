@@ -92,15 +92,15 @@ def get_object_identifier(prefix, file: File):
     return obj_identifier
 
 
-def process_file(s3_source_bucket, s3_quarantine_bucket, s3_clean_destination_bucket, prefix, file: File):
+def process_file(s3_source_bucket, s3_quarantine_bucket, s3_clean_destination_bucket, prefix, file: File, consignment_id):
     obj_identifier = get_object_identifier(prefix, file)
     return {
         's3SourceBucket': s3_source_bucket,
         's3SourceBucketKey': f'{prefix}/{obj_identifier}',
         's3QuarantineBucket': s3_quarantine_bucket,
-        's3QuarantineBucketKey': f'{prefix}/{obj_identifier}',
+        's3QuarantineBucketKey': f'{consignment_id}/{file.fileId}',
         's3CleanDestinationBucket': s3_clean_destination_bucket,
-        's3CleanDestinationBucketKey': f'{prefix}/{obj_identifier}',
+        's3CleanDestinationBucketKey': f'{consignment_id}/{file.fileId}',
         'fileId': file.fileId,
         'originalPath': get_metadata_value(file, "ClientSideOriginalFilepath"),
         'fileSize': get_metadata_value(file, "ClientSideFileSize"),
@@ -197,7 +197,8 @@ def handler(event, lambda_context):
                 settings.s3_quarantine_bucket,
                 settings.s3_clean_destination_bucket,
                 prefix,
-                file) |
+                file,
+                consignment_id) |
             {'consignmentType': consignment.consignmentType, 'consignmentId': consignment_id, 'userId': user_id}
             for file in consignment.files if file.fileType == "File"],
         "statuses": {
