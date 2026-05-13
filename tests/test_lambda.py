@@ -86,12 +86,20 @@ def test_files_are_returned(mock_url_open, ssm, s3):
         assert file_one["consignmentId"] == consignment_id
         assert file_one["s3SourceBucket"] == "test-bucket"
         assert file_one["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_one_id}"
+        assert file_one["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_one["s3QuarantineBucketKey"] == f"{consignment_id}/{file_one_id}"
+        assert file_one["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_one["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_one_id}"
         assert file_two["fileId"] == file_two_id
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
         assert file_two["s3SourceBucket"] == "test-bucket"
         assert file_two["s3SourceBucketKey"] == f"{user_id}/{consignment_id}/{file_two_id}"
+        assert file_two["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_two["s3QuarantineBucketKey"] == f"{consignment_id}/{file_two_id}"
+        assert file_two["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_two["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_two_id}"
 
         validate_statuses_response(response)
 
@@ -120,12 +128,20 @@ def test_files_are_returned_with_s3_source_overrides_sharepoint(mock_url_open, s
         assert file_one["consignmentId"] == consignment_id
         assert file_one["s3SourceBucket"] == override_bucket
         assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_match_id}"
+        assert file_one["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_one["s3QuarantineBucketKey"] == f"{consignment_id}/{file_one_id}"
+        assert file_one["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_one["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_one_id}"
         assert file_two["fileId"] == file_two_id
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
         assert file_two["s3SourceBucket"] == override_bucket
         assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_match_id}"
+        assert file_two["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_two["s3QuarantineBucketKey"] == f"{consignment_id}/{file_two_id}"
+        assert file_two["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_two["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_two_id}"
 
         validate_statuses_response(response)
 
@@ -154,12 +170,20 @@ def test_files_are_returned_with_s3_source_overrides_harddrive(mock_url_open, ss
         assert file_one["consignmentId"] == consignment_id
         assert file_one["s3SourceBucket"] == override_bucket
         assert file_one["s3SourceBucketKey"] == f"{override_key_prefix}/{file_one_match_id}"
+        assert file_one["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_one["s3QuarantineBucketKey"] == f"{consignment_id}/{file_one_id}"
+        assert file_one["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_one["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_one_id}"
         assert file_two["fileId"] == file_two_id
         assert file_two["originalPath"] == "testfile/subfolder/subfolder1.txt"
         assert file_two["userId"] == user_id
         assert file_two["consignmentId"] == consignment_id
         assert file_two["s3SourceBucket"] == override_bucket
         assert file_two["s3SourceBucketKey"] == f"{override_key_prefix}/{file_two_match_id}"
+        assert file_two["s3QuarantineBucket"] == "test-quarantine-bucket"
+        assert file_two["s3QuarantineBucketKey"] == f"{consignment_id}/{file_two_id}"
+        assert file_two["s3CleanDestinationBucket"] == "test-clean-bucket"
+        assert file_two["s3CleanDestinationBucketKey"] == f"{consignment_id}/{file_two_id}"
 
         validate_statuses_response(response)
 
