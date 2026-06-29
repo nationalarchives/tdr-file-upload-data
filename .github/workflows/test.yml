@@ -12,12 +12,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.13'
-      - uses: nationalarchives/tdr-github-actions/.github/actions/run-git-secrets@13faff54c193651ee30482ebdf01e083c8b14203 # v0.0.17
-      - uses: nationalarchives/tdr-github-actions/.github/actions/slack-send@13faff54c193651ee30482ebdf01e083c8b14203 # v0.0.17
+      - uses: nationalarchives/tdr-github-actions/.github/actions/run-git-secrets@f318ce8a5d99c08b1235663f97fdb1b35844674e # v0.0.39
+      - uses: nationalarchives/tdr-github-actions/.github/actions/slack-send@f318ce8a5d99c08b1235663f97fdb1b35844674e # v0.0.39
         if: failure()
         with:
           message: ":warning: Secrets found in repository ${{ inputs.repo-name }}"
