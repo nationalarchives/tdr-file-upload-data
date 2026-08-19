@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read
 jobs:
   pre-deploy:
-    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_build.yml@13faff54c193651ee30482ebdf01e083c8b14203 # v0.0.17
+    uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_build.yml@2d29c2e83fbaba6554c1e0d8c0b45d2015d610b2 # v0.0.41
     with:
       repo-name: tdr-file-upload-data
       lambda-name: file-upload-data
@@ -26,7 +28,10 @@ jobs:
     needs: pre-deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - run: gh workflow run deploy.yml -f environment=intg -f to-deploy=${{ needs.pre-deploy.outputs.next-version }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+      - run: gh workflow run deploy.yml -f environment=intg -f to-deploy=${NEXT_VERSION}
         env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_PAT }}
+          NEXT_VERSION: ${{ needs.pre-deploy.outputs.next-version }}
