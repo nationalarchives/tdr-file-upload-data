@@ -8,6 +8,9 @@ permissions:
   contents: read
 jobs:
   pre-deploy:
+    permissions:
+      contents: write
+      id-token: write
     uses: nationalarchives/tdr-github-actions/.github/workflows/lambda_build.yml@2d29c2e83fbaba6554c1e0d8c0b45d2015d610b2 # v0.0.41
     with:
       repo-name: tdr-file-upload-data
